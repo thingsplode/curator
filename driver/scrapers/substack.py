@@ -2,7 +2,7 @@ import logging
 import os
 import json
 import requests
-import html2text
+import random
 from threading import stack_size
 from operator import is_not, pos
 from functools import partial
@@ -17,7 +17,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.service import Service
 from datetime import datetime
-from driver import save_posts_to_db, get_existing_urls_for_domain
+from driver.utils.dbops import save_posts_to_db, get_existing_urls_for_domain
+from driver.utils.utils import html_to_md, TqdmLoggingHandler
 
 
 # initial source: https://github.com/timf34/Substack2Markdown/blob/main/substack_scraper.py
@@ -25,38 +26,9 @@ from driver import save_posts_to_db, get_existing_urls_for_domain
 # Soup should be created potentially only once
 
 logger = logging.getLogger(__name__)
-# logger.setLevel(logging.DEBUG)
+logger.addHandler(TqdmLoggingHandler())
 
-def html_to_md(title: str, subtitle: str, date: str, like_count: str, html_content: str) -> str:
-    """
-    This method converts HTML to Markdown
-    """
-    def combine_metadata_and_content(content: str) -> str:
-        """
-        Combines the title, subtitle, and content into a single string with Markdown format
-        """
-        if not isinstance(title, str):
-            raise ValueError("title must be a string")
-
-        if not isinstance(content, str):
-            raise ValueError("content must be a string")
-
-        metadata = f"# {title}\n\n"
-        if subtitle:
-            metadata += f"## {subtitle}\n\n"
-        metadata += f"**{date}**\n\n"
-        metadata += f"**Likes:** {like_count}\n\n"
-
-        return metadata + content
-    if not isinstance(html_content, str):
-        raise ValueError("html_content must be a string")
-    h = html2text.HTML2Text()
-    h.ignore_links = False
-    h.body_width = 0
-    md_content = h.handle(html_content)
-    return combine_metadata_and_content(md_content)
-
-def scrape_substack(urls: List[str], base_dir: str, num_posts_to_scrape = None, authentication: dict[str, str] = dict()):
+def scrape_substack(urls: List[str], working_dir: str, project_dir: str, num_posts_to_scrape = None, authentication: dict[str, str] = dict()):
     total = 0
     posts_data = list()
     def get_url_soup(url: str) -> Optional[BeautifulSoup]:
@@ -67,7 +39,7 @@ def scrape_substack(urls: List[str], base_dir: str, num_posts_to_scrape = None, 
             page = requests.get(url, headers=None)
             soup = BeautifulSoup(page.content, "html.parser")
             if soup.find("h2", class_="paywall-title"):
-                logger.debug(f'Skipping premium article: {url}')
+                logger.warning(f'Skipping premium article: {url}')
                 return None
             return soup
         except Exception as e:
@@ -87,8 +59,12 @@ def scrape_substack(urls: List[str], base_dir: str, num_posts_to_scrape = None, 
         
         options = webdriver.ChromeOptions()
         options.add_argument('--headless=new')
-        options.add_argument(f'--user-agent=Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Mobile Safari/537.36')
-        service = Service(executable_path='./chromedriver/chromedriver')
+        # options.add_argument(f'--user-agent=Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Mobile Safari/537.36')
+        options.add_argument(f'--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36')
+        options.add_argument("--window-size=1920,1080")
+        options.add_argument("--lang=en-US")
+        logger.debug(f'Initializing driver with path: {project_dir}/chromedriver/chromedriver')
+        service = Service(executable_path=f'{project_dir}/chromedriver/chromedriver')
         driver = webdriver.Chrome(service=service, options=options)
         driver.get("https://substack.com/sign-in")
         sleep(3)
@@ -100,6 +76,7 @@ def scrape_substack(urls: List[str], base_dir: str, num_posts_to_scrape = None, 
                 # Email and password
         email = driver.find_element(By.NAME, "email")
         password = driver.find_element(By.NAME, "password")
+        logger.debug(f"email: {authentication.get('email','')}")
         email.send_keys(authentication.get('email',''))
         password.send_keys(authentication.get('password',''))
 
@@ -188,7 +165,7 @@ def scrape_substack(urls: List[str], base_dir: str, num_posts_to_scrape = None, 
             try:
                 url_leaf = next((item for item in reversed(urlparse(post_url).path.split('/'))), None)
                 if url_leaf in ['about', 'archive']:
-                    logger.debug(f'Skipping {post_url}')
+                    logger.debug(f'Skipping {post_url} as it is not a post (about or archive)')
                     return None
                 logger.debug(f'Scraping {post_url}')
                 soup = get_authenticated_url_soup(post_url, driver=driver)
@@ -211,10 +188,11 @@ def scrape_substack(urls: List[str], base_dir: str, num_posts_to_scrape = None, 
      
     driver = get_authenticated_driver()
     
+    # start scraping
     for url in urls:
         url = url if url.endswith('/') else url + '/'
         domain = [p for p in urlparse(url).netloc.split('.') if p != 'www'][0]
-        os.makedirs(f'{base_dir}/{domain}', exist_ok=True) 
+        # os.makedirs(f'{working_dir}/{domain}', exist_ok=True) 
         
         sitemap_urls_and_dates: List[Tuple[str, Optional[datetime]]] = fetch_urls_from_sitemap(url)
         logger.debug(f'length of sitemaps for {url}: {len(sitemap_urls_and_dates)}')
@@ -223,12 +201,14 @@ def scrape_substack(urls: List[str], base_dir: str, num_posts_to_scrape = None, 
         
         filtered_sitemap_urls_and_dates = [
             (url, date) for url, date in sitemap_urls_and_dates
-            if urlparse(url).path.split('/')[-1] not in ['about', 'archive'] #'podcast'
+            if urlparse(url).path.split('/')[-1] not in ['about', 'archive', 'podcast']
         ]
         
+
+        existing_urls = get_existing_urls_for_domain(domain)
         filtered_sitemap_urls_and_dates = [
             (url, date) for url, date in filtered_sitemap_urls_and_dates
-            if url not in get_existing_urls_for_domain(domain)
+            if url not in existing_urls
         ]
         if len(filtered_sitemap_urls_and_dates) == 0:
             logger.debug(f'No new posts found for {url}. Skipping to next URL.')
@@ -244,7 +224,8 @@ def scrape_substack(urls: List[str], base_dir: str, num_posts_to_scrape = None, 
                 total += 1
             elif result:
                 result['date'] = post_date.isoformat() if post_date else None
-                posts_data.append(result)
+                posts_data.append(result)    
+            sleep(random.uniform(2, 5))
     
     driver.quit()
     logger.debug('Scraping is finished')

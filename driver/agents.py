@@ -3,12 +3,12 @@ import autogen
 import json
 import os
 import logging
-from driver.utils import get_recent_unprocessed_posts_by_domain, mark_posts_as_processed
+from driver.utils.dbops import get_recent_unprocessed_posts_by_domain, mark_posts_as_processed
 from openai import OpenAI
 
 logger = logging.getLogger(__name__)
 categories = [
-    'product design', 'product culture', 'leadership', 'people management', 'technical', 'product hack', 'go to market', 'sales', 'data analysis', 'data driven decision making'
+    'product design', 'product culture', 'leadership', 'people management', 'technical', 'product hack', 'go to market', 'sales', 'data analysis', 'data driven decision making', 'uncategorized'
 ]
 # class SummaryAgent(autogen.AssistantAgent):
 #     def __init__(self):
@@ -100,7 +100,7 @@ def process_unprocessed_posts(limit=None):
             }
         
         prompt = f"Write a short and engaging summary of the following content in 2 lines. Categorize the post into one of the following categories: \
-        {", ".join(categories)}. \
+        { ', '.join(categories)}. \
         Return a structure answer in JSON format, separating the text summary and the category:\n\n{post.get('md')}"
         
         response = client.chat.completions.create(
@@ -132,7 +132,7 @@ def process_unprocessed_posts(limit=None):
     client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
     
     unprocessed_posts = get_recent_unprocessed_posts_by_domain()
-    print(f"Unprocessed posts length: {len(unprocessed_posts)}")
+    logger.debug(f"Unprocessed posts length: {len(unprocessed_posts)}")
     summaries = list()
     logger.debug(f"Summary limit: {limit}")
     for post in unprocessed_posts[:limit] if limit else unprocessed_posts:

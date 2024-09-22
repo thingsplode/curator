@@ -3,6 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Newsletter Summary</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            margin-top: 30px;
+        }
+        ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        li {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            transition: transform 0.2s ease-in-out;
+        }
+        li:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .domain {
+            font-weight: bold;
+            color: #e74c3c;
+            font-size: 0.9em;
+        }
+        .summary {
+            display: block;
+            margin: 10px 0;
+            font-style: italic;
+            color: #7f8c8d;
+        }
+        a {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: bold;
+            transition: color 0.3s ease;
+        }
+        a:hover {
+            color: #2980b9;
+            text-decoration: underline;
+        }
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            .container {
+                padding: 15px;
+                width: 66.67%;
+                margin: 0 auto;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Summary</title>
     <style>
         body { font-family: Arial, sans-serif; line-height: 1.6; padding: 20px; }
@@ -16,17 +92,43 @@
     </style>
 </head>
 <body>
-    {% for category, items in categories.items() %}
-        <h1>{{ category }}</h1>
-        <ul>
-        {% for item in items %}
-            <li>
-                <span class="domain">[{{ item.domain }}]</span>
-                <span class="summary">{{ item.summary }}</span>
-                <a href="{{ item.url }}">{{ item.title }}</a>
-            </li>
+    <div class="container">
+        {% for category, items in categories.items() %}
+            <h1>
+                {% if category == "product design" %}💭
+                {% elif category == "product culture" %}🙌
+                {% elif category == "leadership" %}🏆
+                {% elif category == "data analysis" %}📊
+                {% elif category == "data driven decision making" %}🧠
+                {% elif category == "technical" %}🎡
+                {% elif category == "product hack" %}	💫
+                {% elif category == "go to market" %}🚀
+                {% elif category == "people management" %}👥
+                {% elif category == "sales" %}💼
+                {% elif category == "'uncategorized'" %}🦜
+                {% else %}📊
+                {% endif %}
+                {{ category }}
+            </h1>
+            <ul>
+            {% for item in items %}
+                <li>
+                    <span class="domain">[{{ item.domain }}]</span> <a href="{{ item.url }}">{{ item.title }}</a>
+                    <span class="summary">{{ item.summary }}</span>
+                </li>
+            {% endfor %}
+            </ul>
         {% endfor %}
-        </ul>
-    {% endfor %}
+        <footer>
+            <p>Don't want to receive these updates? <a href="#" id="unsubscribe">Unsubscribe here</a>.</p>
+        </footer>
+    </div>
+
+    <script>
+        document.getElementById('unsubscribe').addEventListener('click', function(e) {
+            e.preventDefault();
+            alert('You have been unsubscribed from the newsletter.');
+        });
+    </script>
 </body>
 </html>
