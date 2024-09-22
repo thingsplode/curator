@@ -28,7 +28,7 @@ from driver.utils.utils import html_to_md, TqdmLoggingHandler
 logger = logging.getLogger(__name__)
 logger.addHandler(TqdmLoggingHandler())
 
-def scrape_substack(urls: List[str], working_dir: str, project_dir: str, num_posts_to_scrape = None, authentication: dict[str, str] = dict()):
+def scrape_substack(urls: List[str], project_dir: str, num_posts_to_scrape = None, authentication: dict[str, str] = dict()):
     total = 0
     posts_data = list()
     def get_url_soup(url: str) -> Optional[BeautifulSoup]:

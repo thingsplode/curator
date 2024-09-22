@@ -52,7 +52,7 @@ def html_to_md(title: str, subtitle: str, date: str, like_count: str, html_conte
     md_content = h.handle(html_content)
     return combine_metadata_and_content(md_content)
 
-def generate_html_summary(summary_data):
+def generate_html_summary(summary_data: dict, data_folder: str):
     # Set up Jinja2 environment
     env = Environment(loader=FileSystemLoader('templates'))
     template = env.get_template('summary_template.html')
@@ -60,7 +60,7 @@ def generate_html_summary(summary_data):
     # Group summaries by category
     categories = {}
     for category, items in summary_data.items():
-        category = category.capitalize()
+        category = category.title()
         categories[category] = []
         for item in items:
             categories[category].append({
@@ -78,10 +78,11 @@ def generate_html_summary(summary_data):
     filename = f"{current_date}_summary.html"
 
     # Ensure the directory exists
-    os.makedirs('summaries', exist_ok=True)
+    content_folder = os.path.join(data_folder, 'summaries')
+    os.makedirs(content_folder, exist_ok=True)
 
     # Write the HTML file
-    with open(os.path.join('summaries', filename), 'w', encoding='utf-8') as f:
+    with open(os.path.join(content_folder, filename), 'w', encoding='utf-8') as f:
         f.write(html_content)
 
     logger.info(f"Generated HTML summary: {filename}")

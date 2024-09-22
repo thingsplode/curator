@@ -52,7 +52,7 @@ categories = [
 #     urls_to_mark = [post['url'] for post in unprocessed_posts]
 #     mark_posts_as_processed(urls_to_mark)
 
-def process_unprocessed_posts(limit=None):
+def process_unprocessed_posts(limit=None, summaries_file=None):
     def restructure_summaries(summaries):
         category_bag = {}
         for summary in summaries:
@@ -99,7 +99,7 @@ def process_unprocessed_posts(limit=None):
                 "category": category
             }
         
-        prompt = f"Write a short and engaging summary of the following content in 2 lines. Categorize the post into one of the following categories: \
+        prompt = f"Write a short and engaging summary of the following content in 2 to 3 lines. Categorize the post into one of the following categories: \
         { ', '.join(categories)}. \
         Return a structure answer in JSON format, separating the text summary and the category:\n\n{post.get('md')}"
         
@@ -143,4 +143,9 @@ def process_unprocessed_posts(limit=None):
     # Replace the original summaries list with the category bag
     urls_to_mark = [post['url'] for post in unprocessed_posts]
     mark_posts_as_processed(urls_to_mark)
-    return filter_invalid_summaries(category_bag)
+    filtered_category_bag = filter_invalid_summaries(category_bag)
+    
+    # Write the filtered category bag to summaries.json
+    with open(summaries_file, 'w') as f:
+        json.dump(filtered_category_bag, f, indent=4)
+    

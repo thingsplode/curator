@@ -5,14 +5,12 @@ from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
-DB_PATH = 'media_posts.db'
-
 # Global connection object
 conn = None
 
-def initialize_db():
+def initialize_db(database_file):
     global conn
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(database_file)
     conn.row_factory = sqlite3.Row  # This enables column access by name
     atexit.register(close_db)
 
@@ -25,11 +23,8 @@ def close_db():
 def get_cursor():
     global conn
     if not conn:
-        initialize_db()
+        raise RuntimeError("Database connection not initialized. Call initialize_db() before using database operations.")
     return conn.cursor()
-
-# Initialize the database connection when the module is imported
-initialize_db()
 
 def get_existing_urls_for_domain(domain):
     """

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Newsletter Summary</title>
+    <title>ProductLab TLDR Newsletter</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -73,13 +73,19 @@
                 text-align: center;
             }
         }
+        .logo {
+            display: block;
+            margin: 0 auto 20px;
+            max-width: 200px;
+            height: auto;
+        }
     </style>
 </head>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Summary</title>
+    <title>ProductLab Newsletter</title>
     <style>
         body { font-family: Arial, sans-serif; line-height: 1.6; padding: 20px; }
         h1 { color: #333; border-bottom: 2px solid #333; padding-bottom: 10px; }
@@ -93,23 +99,27 @@
 </head>
 <body>
     <div class="container">
+        <header>
+            <img src="https://assets.circle.so/xe5bde1jw9bcn1cpucj4kmcyhanq" alt="ProductLab Logo" class="logo">
+            <h1>Weekly TL;DR; Newsletter</h1>
+        </header>
         {% for category, items in categories.items() %}
-            <h1>
-                {% if category == "product design" %}💭
-                {% elif category == "product culture" %}🙌
-                {% elif category == "leadership" %}🏆
-                {% elif category == "data analysis" %}📊
-                {% elif category == "data driven decision making" %}🧠
-                {% elif category == "technical" %}🎡
-                {% elif category == "product hack" %}	💫
-                {% elif category == "go to market" %}🚀
-                {% elif category == "people management" %}👥
-                {% elif category == "sales" %}💼
-                {% elif category == "'uncategorized'" %}🦜
+            <h2>
+                {% if category == "Product Design" %}💭
+                {% elif category == "Product Culture" %}🙌
+                {% elif category == "Leadership" %}🏆
+                {% elif category == "Data Analysis" %}📊
+                {% elif category == "Data Driven Decision Making" %}🧠
+                {% elif category == "Technical" %}🎡
+                {% elif category == "Product Hack" %}💫
+                {% elif category == "Go To Market" %}🚀
+                {% elif category == "People Management" %}👥
+                {% elif category == "Sales" %}💼
+                {% elif category == "Uncategorized" %}🦜
                 {% else %}📊
                 {% endif %}
                 {{ category }}
-            </h1>
+            </h2>
             <ul>
             {% for item in items %}
                 <li>
