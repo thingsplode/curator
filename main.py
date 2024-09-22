@@ -113,12 +113,14 @@ def main():
                     scrape_substacks(configuration, args.posts_to_scrape)
                 case "summarize" | "all":
                     logger.debug('Start summarizing')
-                    process_unprocessed_posts(limit=args.posts_to_process)
+                    process_unprocessed_posts(limit=args.posts_to_process, summaries_file=summaries_file)
                 case "generate" | "all":
                     logger.debug('Start generating')
                     try:
                         with open(summaries_file, 'r') as f:
                             summaries_bag = json.load(f)
+                            if not summaries_bag:
+                                raise ValueError("Cannot generate HTML. Please summarize a couple of posts first.")
                             generate_html_summary(summaries_bag, args.data_folder)
                     except FileNotFoundError:
                         logger.error("summaries.json file not found")

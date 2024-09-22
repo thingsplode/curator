@@ -10,47 +10,6 @@ logger = logging.getLogger(__name__)
 categories = [
     'product design', 'product culture', 'leadership', 'people management', 'technical', 'product hack', 'go to market', 'sales', 'data analysis', 'data driven decision making', 'uncategorized'
 ]
-# class SummaryAgent(autogen.AssistantAgent):
-#     def __init__(self):
-#         super().__init__(
-#             name="SummaryAgent",
-#             system_message="You are an expert copywriter and journalist, good at writing short, engaging summaries of blog posts. You're tasked to write a TL;DR style newletter by summarizing interesting posts from a given list.",
-#             llm_config={
-#                 "temperature": 0.7,
-#                 "max_tokens": 150,
-#                 "config_list": [{"model": "gpt-4o", "api_key": os.environ["OPENAI_API_KEY"]}],
-#             }
-#         )
-
-#     def summarize_post(self, content):
-#         prompt = f"Write a short and engaging summary of the following content in 2 lines:\n\n{content}"
-#         response = self.initiate_chat(prompt)
-#         print(f'response: {response}')
-#         return response['content'].strip()  # Extracting content from the response
-
-# def process_unprocessed_posts():
-#     summary_agent = autogen.AssistantAgent(
-#         name="SummaryAgent",
-#         system_message="You are an expert copywriter and journalist, good at writing short, engaging summaries of blog posts. You're tasked to write a TL;DR style newletter by summarizing interesting posts from a given list.",
-#         llm_config={
-#             "temperature": 0.7,
-#             "max_tokens": 150,
-#             "config_list": [{"model": "gpt-4o", "api_key": os.environ["OPENAI_API_KEY"]}],
-#         }
-#     )
-#     user_proxy = autogen.UserProxyAgent(name="Human", human_input_mode="NEVER", code_execution_config=False)
-
-#     print(f"Unprocessed posts length: {len(unprocessed_posts)}")
-#     for post in unprocessed_posts:
-#         prompt = f"Write a short and engaging summary of the following content in 2 lines:\n\n{post.get('md')}"
-#         chat_result = user_proxy.initiate_chat(summary_agent, message=prompt)
-#         # summary = summary_agent.summarize_post(post.get('md'))
-#         # print(f"Summary for {post['url']}:\n{summary}\n")
-#         print(f"Chat result: {chat_result}")
-    
-#     # Mark posts as processed
-#     urls_to_mark = [post['url'] for post in unprocessed_posts]
-#     mark_posts_as_processed(urls_to_mark)
 
 def process_unprocessed_posts(limit=None, summaries_file=None):
     def restructure_summaries(summaries):
@@ -94,14 +53,17 @@ def process_unprocessed_posts(limit=None, summaries_file=None):
             return {
                 "url": post.get('url'),
                 "title": post.get('title'),
+                "subtitle": post.get('subtitle'),
                 "domain": post.get('domain'),
+                "date": post.get('date'),
                 "summary": summary,
                 "category": category
             }
         
-        prompt = f"Write a short and engaging summary of the following content in 2 to 3 lines. Categorize the post into one of the following categories: \
+        prompt = f"Write a short and engaging summary of the following markdown content in 2 to 3 lines. Ensure that the symmary includes 1-2 key insights and provides a compelling reason to read the full article.\
+        Categorize the post into one of the following categories: \
         { ', '.join(categories)}. \
-        Return a structure answer in JSON format, separating the text summary and the category:\n\n{post.get('md')}"
+        Return a structured answer in JSON format, separating the summary, the category and anoptional error only in case you cannot fulfill the task:\n\n{post.get('md')}"
         
         response = client.chat.completions.create(
             model="gpt-4",
@@ -110,33 +72,40 @@ def process_unprocessed_posts(limit=None, summaries_file=None):
                 {"role": "user", "content": prompt}
             ],
             temperature=0.7,
-            max_tokens=150
+            max_tokens=500
             )
+        logger.debug(f"Response: {response}")
         response_content = response.choices[0].message.content.strip()
-        try:
-            parsed_content = json.loads(response_content)
-            result = create_result(parsed_content.get('summary', ''), parsed_content.get('category', ''))
-        except json.JSONDecodeError:
-            logger.warning(f"Failed to parse JSON from response for {post.get('url')}")
-            result = create_result(response_content, "uncategorized")
-        logger.debug(f"Domain: {post.get('domain')} | Url: {post.get('url')} | Summary: {result['summary']}")
-        
         # Rate limiting: 10000 tokens per minute
         tokens_used = response.usage.total_tokens
         sleep_time = tokens_used / 10000
         logger.debug(f"Sleeping for {sleep_time} seconds")
         time.sleep(sleep_time)  # Sleep for a fraction of a minute based on tokens used
-        
-        return result
+        try:
+            parsed_content = json.loads(response_content)
+            if 'error' in parsed_content and parsed_content['error'] is not None and parsed_content['error'] != '':
+                logger.error(f"Error in response for {post.get('url')}: {parsed_content['error']}")
+                return None
+            result = create_result(parsed_content.get('summary', ''), parsed_content.get('category', ''))
+            logger.info(f"Domain: {post.get('domain')} | Url: {post.get('url')} | Summary: {result['summary']}")
+            return result
+        except json.JSONDecodeError:
+            logger.error(f"Failed to parse JSON from response for {post.get('url')}. Initial content: {response_content}")
+            return None
     
-    client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+    try:
+        client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+    except KeyError as e:
+        raise ValueError("OPENAI_API_KEY environment variable is not set. Please set it before running the script.")
     
     unprocessed_posts = get_recent_unprocessed_posts_by_domain()
     logger.debug(f"Unprocessed posts length: {len(unprocessed_posts)}")
     summaries = list()
     logger.debug(f"Summary limit: {limit}")
     for post in unprocessed_posts[:limit] if limit else unprocessed_posts:
-        summaries.append(process_single_post(post))
+        result = process_single_post(post)
+        if result:
+            summaries.append(result)
 
     # Restructure summaries into a category bag
     category_bag = restructure_summaries(summaries)
