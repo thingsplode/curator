@@ -5,7 +5,8 @@ summaries/
 __pycache__/
 *.py[cod]
 *$py.class
-
+.DS_Store
+summaries.json
 # C extensions
 *.so
 
