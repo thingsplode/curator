@@ -131,5 +131,8 @@ def main():
         logger.error(e, stack_info=True, exc_info=True)
         exit(-1)
 if __name__ == "__main__":
+    # todo: review the titles of the posts in the newsletter (why are they loosing their capitalization?)
+    # todo: add the blog title instead of the domain
+    # todo: save back the categories to the posts in the database
     main()
 

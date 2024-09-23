@@ -40,4 +40,27 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 ```
+Execute the script with the following command:
+```
+python main.py
+```
+
+You can execute only selected steps by using the --steps flag.
+```
+python main.py --steps scrape
+python main.py --steps summarize
+python main.py --steps generate
+```
+or multiple steps at once:
+```
+python main.py --steps summarize generate
+```
+The default data folder is ./data. You can change this by using the --data_folder flag.
+```
+python main.py --data_folder ./another_folder
+``` 
+By default, the script will scrape 5 posts and summarize 5 posts. You can change this by using the --posts_to_scrape and --posts_to_process flags.
+```
+python main.py --posts_to_scrape 10 --posts_to_process 10
+``` 
 

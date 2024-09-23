@@ -1,8 +1,7 @@
 import logging
-import os
-import json
 import requests
 import random
+import tqdm
 from threading import stack_size
 from operator import is_not, pos
 from functools import partial
@@ -11,19 +10,29 @@ from urllib.parse import urlparse
 from xml.etree import ElementTree as ET
 from typing import List, Optional, Tuple
 from bs4 import BeautifulSoup
-from tqdm import tqdm
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.service import Service
 from datetime import datetime
 from driver.utils.dbops import save_posts_to_db, get_existing_urls_for_domain
-from driver.utils.utils import html_to_md, TqdmLoggingHandler
+from driver.utils.utils import html_to_md
 
 
 # initial source: https://github.com/timf34/Substack2Markdown/blob/main/substack_scraper.py
-# todo: refactor to log in only once, no matter how much scraping is happening
 # Soup should be created potentially only once
+
+class TqdmLoggingHandler(logging.Handler):
+    def __init__(self, level=logging.NOTSET):
+        super().__init__(level)
+
+    def emit(self, record):
+        try:
+            msg = self.format(record)
+            tqdm.tqdm.write(msg, end=self.terminator)
+            # self.flush()
+        except Exception:
+            self.handleError(record) 
 
 logger = logging.getLogger(__name__)
 logger.addHandler(TqdmLoggingHandler())
@@ -83,7 +92,7 @@ def scrape_substack(urls: List[str], project_dir: str, num_posts_to_scrape = Non
         # Find the submit button and click it.
         submit = driver.find_element(By.XPATH, "//*[@id=\"substack-login\"]/div[2]/div[2]/form/button")
         sleep(3)
-        logger.debug('submitting pass')
+        logger.debug('submitting password')
         submit.click()
         sleep(5)  # Wait for the page to load
 
@@ -218,7 +227,7 @@ def scrape_substack(urls: List[str], project_dir: str, num_posts_to_scrape = Non
         total = num_posts_to_scrape if num_posts_to_scrape is not None else len(filtered_sitemap_urls_and_dates)
         logger.debug(f'Scraping {total} posts after filtering for {url}.')
 
-        for post_url, post_date in tqdm(filtered_sitemap_urls_and_dates[:total], total=total):
+        for post_url, post_date in tqdm.tqdm(filtered_sitemap_urls_and_dates[:total], total=total):
             result = scrape_post(post_url, domain, driver)
             if result == 'retry':
                 total += 1

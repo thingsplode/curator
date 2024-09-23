@@ -1,6 +1,5 @@
 import logging
 import html2text
-from tqdm import tqdm
 from jinja2 import Environment, FileSystemLoader
 from datetime import datetime
 import os
@@ -8,20 +7,6 @@ import json
 
 
 logger = logging.getLogger(__name__)
-
-# Global constant for database path
-
-class TqdmLoggingHandler(logging.Handler):
-    def __init__(self, level=logging.NOTSET):
-        super().__init__(level)
-
-    def emit(self, record):
-        try:
-            msg = self.format(record)
-            tqdm.write(msg, end=self.terminator)
-            # self.flush()
-        except Exception:
-            self.handleError(record) 
 
 def html_to_md(title: str, subtitle: str, date: str, like_count: str, html_content: str) -> str:
     """
