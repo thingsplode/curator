@@ -18,6 +18,7 @@ Download MacOs drivers:
 mkdir -p chromedriver
 cd chromedriver
 curl -O https://storage.googleapis.com/chrome-for-testing-public/129.0.6668.58/mac-arm64/chromedriver-mac-arm64.zip
+curl -O https://storage.googleapis.com/chrome-for-testing-public/131.0.6778.85/mac-arm64/chromedriver-mac-arm64.zip
 unzip chromedriver-mac-arm64.zip
 ```
 
@@ -25,6 +26,28 @@ Install OpenSSL dependencies:
 ```
 brew install openssl@1.1
 ```
+
+Build the Docker image:
+```
+docker build --platform linux/arm64 -t curator .
+or 
+docker build --platform linux/amd64 -t curator .
+```
+
+Running it:
+```
+docker run --platform linux/amd64 -it \
+    --env-file .env \
+    -v ~/Code/curator/data:/app/data \
+    -v ~/Code/curator/etc:/app/etc \
+    --network host \
+    curator python main.py --posts_to_process 2 --client openai
+```
+
+Don't forget to set the environment variables before running the scraper.
+SUBSTACK_EMAIL="your_email@example.com"
+SUBSTACK_PASSWORD="your_password"
+OPENAI_API_KEY="your_openai_api_key"
 
 ** Set Environment Variables
 Before running the scraper, set the necessary environment variables. Here are some examples:

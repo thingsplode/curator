@@ -1,6 +1,5 @@
 # Use Python 3.12 as base image
-ARG TARGETPLATFORM=linux/amd64
-FROM --platform=$TARGETPLATFORM python:3.12-slim
+FROM python:3.12-slim
 # Set working directory
 WORKDIR /app
 
@@ -45,5 +44,4 @@ ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app
 
 # Command to run an interactive shell
-# CMD ["/bin/bash"]
-CMD ["python", "curator.py"]
+CMD ["/bin/bash"]
