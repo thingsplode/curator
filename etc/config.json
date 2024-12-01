@@ -1,0 +1,37 @@
+{
+    "scrapers": {
+        "substacks": [
+            "https://www.leahtharin.com/", 
+            "https://www.growthunhinged.com/", 
+            "https://katesyuma.substack.com/",
+            "https://www.news.aakashg.com/",
+            "https://www.howtheygrow.co/",
+            "https://www.lennysnewsletter.com/",
+            "https://dpereira.substack.com/",
+            "https://lg.substack.com/",
+            "https://www.productcompass.pm/",
+            "https://productify.substack.com/",
+            "https://newsletter.mkt1.co/",
+            "https://handpickedberlin.substack.com/",
+            "https://www.proofofconcept.pub/"
+        ]
+    },
+    "user_prompt": "Write a concise and engaging summary of the following <MARKDOWN> content in 2-3 lines. Focus on clarity and brevity while highlighting one or two intriguing insights. Include a compelling reason to click and read the full article.\n\n <MARKDOWN>{{ post.md }}</MARKDOWN> \n\n  Respond only with a valid JSON object, including 'summary', 'category', and an optional 'error' if the task cannot be completed. Categorize the content into one of these PREDEFINED CATEGORIES: {{ categories|join(', ') }}. Do not use any other category than the ones provided in PREDEFINED CATEGORIES and try to fit the article into one of the PREDEFINED CATEGORIES. If the article does not fit into one of the PREDEFINED CATEGORIES, use 'other' Example: {\"summary\": \"...\",\"category\": \"...\",\"error\": \"...\"}. Do not include any text other than the JSON object.",
+    "categories": [
+        "product design",
+        "product culture",
+        "product strategy",
+        "leadership",
+        "people management",
+        "technical",
+        "product hack",
+        "go to market",
+        "sales",
+        "data analysis",
+        "data driven decision making", 
+        "uncategorized"
+    ],
+    "system_prompt": "You are an expert copywriter and journalist. Your task is to write a TL;DR style newsletter by summarizing blog-posts and intrigue the reader to click on the link and read the full article.",
+    "max_tokens": 500,
+    "temperature": 0.7
+}
