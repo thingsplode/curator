@@ -2,7 +2,7 @@ import time
 import json
 import os
 import logging
-from driver.utils.dbops import get_recent_unprocessed_posts_by_domain, mark_posts_as_processed
+from driver.utils.dbops import get_recent_unprocessed_posts_by_domain, mark_posts_as_processed, save_summary_to_db
 from jinja2 import Template
 
 logger = logging.getLogger(__name__)
@@ -92,6 +92,7 @@ def process_posts(limit=None, summaries_file=None, client=None, configuration=No
         result = process_single_post(post)
         if result:
             summaries.append(result)
+            save_summary_to_db(result)
 
     # Restructure summaries into a category bag
     category_bag = restructure_summaries(summaries)

@@ -39,7 +39,7 @@ def html_to_md(title: str, subtitle: str, date: str, like_count: str, html_conte
 
 def generate_html_summary(summary_data: dict, data_folder: str):
     # Set up Jinja2 environment
-    env = Environment(loader=FileSystemLoader('templates'))
+    env = Environment(loader=FileSystemLoader('etc/templates'))
     template = env.get_template('summary_template.html')
 
     # Group summaries by category

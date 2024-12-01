@@ -148,6 +148,49 @@ def mark_posts_as_processed(urls):
         return 0
 
 
+def save_summary_to_db(summary):
+    cursor = get_cursor()
+    
+    # Create table if it doesn't exist
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS summaries (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            url TEXT UNIQUE,
+            title TEXT,
+            subtitle TEXT,
+            domain TEXT,
+            date TEXT,
+            summary TEXT,
+            category TEXT,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    # Prepare the insert/update query
+    query = '''
+        INSERT OR REPLACE INTO summaries
+        (url, title, subtitle, domain, date, summary, category)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    '''
+
+    try:
+        cursor.execute(query, (
+            summary.get('url', ''),
+            summary.get('title', ''),
+            summary.get('subtitle', ''),
+            summary.get('domain', ''),
+            summary.get('date', ''),
+            summary.get('summary', ''),
+            summary.get('category', '')
+        ))
+        conn.commit()
+        logger.info(f"Saved/updated summary for URL: {summary.get('url')}")
+        return True
+    except sqlite3.Error as e:
+        logger.error(f"Database error when saving summary: {e}")
+        return False
+    
+
+
 def save_posts_to_db(posts_data):
     cursor = get_cursor()
 
@@ -156,6 +199,7 @@ def save_posts_to_db(posts_data):
         CREATE TABLE IF NOT EXISTS posts (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             domain TEXT,
+            blog_title TEXT,
             url TEXT UNIQUE,
             title TEXT,
             subtitle TEXT,
@@ -172,8 +216,8 @@ def save_posts_to_db(posts_data):
     # Prepare the insert/update query
     query = '''
         INSERT OR REPLACE INTO posts 
-        (domain, url, title, subtitle, like_count, date, md, source, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, COALESCE((SELECT created_at FROM posts WHERE url = ?), ?), ?)
+        (domain, blog_title, url, title, subtitle, like_count, date, md, source, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE((SELECT created_at FROM posts WHERE url = ?), ?), ?)
     '''
 
     current_time = datetime.now().isoformat()
@@ -182,6 +226,7 @@ def save_posts_to_db(posts_data):
     for post in posts_data:
         cursor.execute(query, (
             post.get('domain', ''),
+            post.get('blog_title', ''),
             post.get('url', ''),
             post.get('title', ''),
             post.get('subtitle', ''),

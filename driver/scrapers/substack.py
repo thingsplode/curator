@@ -119,6 +119,9 @@ def scrape_substack(urls: List[str], project_dir: str, num_posts_to_scrape = Non
         """
         Converts substack post soup to markdown, returns metadata and content
         """
+        blog_title_element = soup.select_one("a.navbar-title-link")
+        blog_title = blog_title_element.text.strip() if blog_title_element else ""
+        
         title_element = soup.select_one("h1.post-title, h2")
         title = title_element.text.strip() if title_element else "" # When a video is present, the title is demoted to h2
 
@@ -134,7 +137,7 @@ def scrape_substack(urls: List[str], project_dir: str, num_posts_to_scrape = Non
 
         content = str(soup.select_one("div.available-content"))
         md = html_to_md(title, subtitle, date, like_count, content)
-        return title, subtitle, like_count, date, md
+        return blog_title, title, subtitle, like_count, date, md
 
     def fetch_urls_from_sitemap(url: str) -> List[Tuple[str, Optional[datetime]]]:
         """
@@ -181,9 +184,10 @@ def scrape_substack(urls: List[str], project_dir: str, num_posts_to_scrape = Non
                 soup = get_url_soup(post_url)
                 if soup is None:
                     return 'retry'
-                title, subtitle, like_count, date, md = extract_post_data(soup)
+                blog_title, title, subtitle, like_count, date, md = extract_post_data(soup)
                 return {
                     'domain': domain,
+                    'blog_title': blog_title,
                     'url': post_url,
                     'title': title,
                     'subtitle': subtitle,
