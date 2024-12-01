@@ -5,108 +5,147 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ProductLab TLDR Newsletter</title>
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            margin: 0;
-            padding: 20px;
-            background-color: #f4f4f4;
+        :root {
+            --primary-color: #3498db;
+            --text-color: #2c3e50;
+            --background-color: #f4f4f4;
+            --card-background: #ffffff;
+            --hover-color: #2980b9;
+            --domain-color: #808080;
+            --summary-color: #7f8c8d;
         }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            background-color: var(--background-color);
+        }
+
         .container {
-            background-color: #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            padding: 30px;
-            max-width: 800px;
+            background-color: var(--card-background);
+            padding: 2rem;
             margin: 0 auto;
             width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
         }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .logo {
+            max-width: 180px;
+            height: auto;
+            margin-bottom: 1rem;
+        }
+
         h1 {
-            color: #2c3e50;
-            border-bottom: 2px solid #3498db;
-            padding-bottom: 10px;
-            margin-top: 30px;
+            font-size: 2rem;
+            color: var(--text-color);
+            border-bottom: 3px solid var(--primary-color);
+            padding-bottom: 0.5rem;
+            margin: 1rem 0;
         }
-        ul {
-            list-style-type: none;
-            padding-left: 0;
+
+        h2 {
+            font-size: 1.5rem;
+            color: var(--text-color);
+            margin: 2rem 0 1rem;
         }
-        li {
-            margin-bottom: 20px;
-            padding: 15px;
-            background-color: #f9f9f9;
-            border-radius: 5px;
-            transition: transform 0.2s ease-in-out;
+
+        .article-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
         }
-        li:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+
+        .article-card {
+            background: var(--card-background);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
+
+        .article-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
         .domain {
-            font-weight: bold;
-            color: #e74c3c;
-            font-size: 0.9em;
+            font-weight: 600;
+            color: var(--domain-color);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
         }
-        .summary {
-            display: block;
-            margin: 10px 0;
-            font-style: italic;
-            color: #7f8c8d;
-        }
-        a {
-            color: #3498db;
+
+        .article-link {
+            color: var(--primary-color);
             text-decoration: none;
-            font-weight: bold;
-            transition: color 0.3s ease;
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin: 0.5rem 0;
         }
-        a:hover {
-            color: #2980b9;
+
+        .article-link:hover {
+            color: var(--hover-color);
             text-decoration: underline;
         }
-        .logo {
+
+        .summary {
+            color: var(--summary-color);
+            font-size: 1rem;
+            margin-top: 0.5rem;
+            line-height: 1.5;
             display: block;
-            margin: 0 auto 20px;
-            max-width: 200px;
-            height: auto;
         }
+
+        footer {
+            text-align: center;
+            padding: 2rem 0;
+            margin-top: 2rem;
+            border-top: 1px solid #eee;
+        }
+
+        /* Progressive enhancement for larger screens */
+        @media (min-width: 768px) {
+            .container {
+                width: 90%;
+                max-width: 800px;
+                margin: 2rem auto;
+                border-radius: 12px;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            }
+        }
+
         @media (min-width: 1200px) {
             .container {
-                width: 66.67%;
+                width: 75%;
+                max-width: 1000px;
             }
         }
-        @media (max-width: 600px) {
-            body {
-                padding: 10px;
-            }
+
+        @media (min-width: 1600px) {
             .container {
-                padding: 15px;
+                width: 60%;
             }
         }
-    </style>
-</head>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ProductLab Newsletter</title>
-    <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; padding: 20px; }
-        h1 { color: #333; border-bottom: 2px solid #333; padding-bottom: 10px; }
-        ul { list-style-type: none; padding-left: 0; }
-        li { margin-bottom: 15px; }
-        .domain { font-weight: bold; color: #555; }
-        .summary { display: block; margin: 5px 0; }
-        a { color: #0066cc; text-decoration: none; }
-        a:hover { text-decoration: underline; }
+
     </style>
 </head>
 <body>
     <div class="container">
         <header>
             <img src="https://assets.circle.so/xe5bde1jw9bcn1cpucj4kmcyhanq" alt="ProductLab Logo" class="logo">
-            <h1>Weekly TL;DR; Newsletter</h1>
+            <h1>Weekly TL;DR Newsletter</h1>
         </header>
+
         {% for category, items in categories.items() %}
             <h2>
                 {% if category == "Product Design" %}💭
@@ -126,25 +165,19 @@
                 {% endif %}
                 {{ category }}
             </h2>
-            <ul>
+            <ul class="article-list">
             {% for item in items %}
-                <li>
-                    <span class="domain">[{{ item.domain }}]</span> <a href="{{ item.url }}">{{ item.title }}</a>
+                <li class="article-card">
+                    <span class="domain">[{{ item.domain }}]</span> <a href="{{ item.url }}" class="article-link">{{ item.title }}</a>
                     <span class="summary">{{ item.summary }}</span>
                 </li>
             {% endfor %}
             </ul>
         {% endfor %}
+
         <footer>
-            <p>Don't want to receive these updates? <a href="#" id="unsubscribe">Unsubscribe here</a>.</p>
+            <p>Don't want to receive these updates? <a href="https://help.circle.so/p/audience/notifications/manage-your-notification-preferences" id="unsubscribe">Unsubscribe here</a></p>
         </footer>
     </div>
-
-    <script>
-        document.getElementById('unsubscribe').addEventListener('click', function(e) {
-            e.preventDefault();
-            alert('You have been unsubscribed from the newsletter.');
-        });
-    </script>
 </body>
 </html>
