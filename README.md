@@ -1,4 +1,14 @@
-** Install Chrome for Selenium Webdirver
+Run the container with Docker:
+```
+docker run -it \
+    -e OPENAI_API_KEY='your-api-key-here' \
+    -v $(pwd)/data:/app/data \
+    -v $(pwd):/app \
+    --network host \
+    curator
+```
+
+** Manual Install Chrome for Selenium Webdirver
 
 Make sure that you have Chrome installed on your machine.
 

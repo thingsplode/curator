@@ -70,10 +70,15 @@ def load_configuration():
 
 def scrape_substacks(configuration: dict, posts_to_scrape: int):
     substacks = configuration.get('scrapers', {}).get('substacks', [])
+    email = os.environ.get('SUBSTACK_EMAIL')
+    password = os.environ.get('SUBSTACK_PASSWORD')
+    if not email or not password:
+        raise ValueError("SUBSTACK_EMAIL and SUBSTACK_PASSWORD environment variables must be set")
+    authentication={'email': email, 'password': password}
     scrape_substack(substacks,
                         project_dir=project_root,
                         num_posts_to_scrape=posts_to_scrape, 
-                        authentication={'email': os.environ.get('SUBSTACK_EMAIL'), 'password': os.environ.get('SUBSTACK_PASSWORD')})
+                        authentication=authentication)
 
 def set_log_level(log_level: str):
     log_level = getattr(logging, log_level.upper())
@@ -97,7 +102,7 @@ def main():
         parser.add_argument('--steps', nargs='+', default=['all'], choices=['all', 'scrape', 'summarize', 'generate'], 
                             help='Steps to execute. Can be "all", "scrape", "summarize", "generate", or any combination.')
         parser.add_argument('--data_folder', type=str, default=f'{project_root}/data', help='Path to the data folder', nargs='?')
-        parser.add_argument('--model', type=str, default='llama3.1', help='Select the model to use. The default is llama3.1', nargs='?')
+        parser.add_argument('--model', type=str, help='Select the model to use', nargs='?')
         parser.add_argument('--client', type=str, default='ollama', help='Select the client to use. The default is ollama', choices=['ollama', 'openai'], nargs='?')
         parser.add_argument('--log-level', type=str, default='INFO', help='Select the log level. The default is INFO', choices=['DEBUG', 'INFO', 'WARNING', 'ERROR'], nargs='?')
         args = parser.parse_args()

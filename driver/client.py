@@ -12,30 +12,36 @@ logger = logging.getLogger(__name__)
 CompletionStrategy = Callable[[str, Optional[str], float, int], Dict[str, any]]
 
 class AIClient:
-    def __init__(self, client_type='ollama', model='llama2'):
+    def __init__(self, client_type='ollama', model=None):
         """Initialize AI client wrapper for either OpenAI or Ollama
 
         Args:
             client_type (str): Type of client - 'ollama' or 'openai'
             model (str): Model name to use
         """
-        self.model = model
+        if model is not None:
+            self.model = model
+        
         match client_type.lower():
             case 'openai':
                 try:
                     api_key = os.environ["OPENAI_API_KEY"]
+                    if not hasattr(self, 'model') or self.model is None:
+                        self.model = 'gpt-4o'
                     client = OpenAI(api_key=api_key)
                     self.strategy = self._create_openai_strategy(client)
                 except KeyError:
                     raise ValueError("OPENAI_API_KEY environment variable must be set for OpenAI client")
             case 'ollama':
+                if not hasattr(self, 'model') or self.model is None:
+                    self.model = 'llama3.1'
                 self.strategy = self._create_ollama_strategy("http://localhost:11434/api")
             case _:
                 raise ValueError(f"Unsupported client type: {client_type}")
 
     def _create_openai_strategy(self, client: OpenAI) -> CompletionStrategy:
         """Creates an OpenAI completion strategy function"""
-        def _apply_rate_limiting(self, tokens_used: int):
+        def _apply_rate_limiting(tokens_used: int):
             # Initialize rate limiting state if not exists
             if not hasattr(self, '_last_request_time'):
                 self._last_request_time = datetime.now()

@@ -73,7 +73,13 @@ def process_posts(limit=None, summaries_file=None, client=None, configuration=No
         logger.debug(f"Response: {response}")
         
         try:
-            parsed_content = json.loads(response.get('content', ''))
+            # Remove markdown json code block wrappers if they exist
+            content = response.get('content', '').strip()
+            if content.startswith('```json'):
+                content = content[7:]  # Remove ```json prefix
+            if content.endswith('```'):
+                content = content[:-3]  # Remove ``` suffix
+            parsed_content = json.loads(content)
             if 'error' in parsed_content and parsed_content['error'] is not None and parsed_content['error'] != '':
                 logger.error(f"Error in response for {post.get('url')}: {parsed_content['error']}")
                 return None
