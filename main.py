@@ -2,7 +2,8 @@ import logging
 import logging.config
 import os, argparse
 import json
-from driver.agents import process_unprocessed_posts
+from driver.agents import process_posts
+from driver.client import AIClient
 from driver.utils.dbops import initialize_db
 from driver.scrapers.substack import scrape_substack
 from driver.utils.utils import generate_html_summary
@@ -54,7 +55,7 @@ logger = logging.getLogger(__name__)
 
 def load_configuration():
         # Read substacks from configuration file
-        config_file = f'{project_root}/config.json'
+        config_file = f'{project_root}/etc/config.json'
         try:
             with open(config_file, 'r') as f:
                 config = json.load(f)
@@ -68,12 +69,22 @@ def load_configuration():
             raise x
 
 def scrape_substacks(configuration: dict, posts_to_scrape: int):
-    substacks = configuration.get('substacks', [])
+    substacks = configuration.get('scrapers', {}).get('substacks', [])
     scrape_substack(substacks,
                         project_dir=project_root,
                         num_posts_to_scrape=posts_to_scrape, 
                         authentication={'email': os.environ.get('SUBSTACK_EMAIL'), 'password': os.environ.get('SUBSTACK_PASSWORD')})
-    
+
+def set_log_level(log_level: str):
+    log_level = getattr(logging, log_level.upper())
+    logging.getLogger('main').setLevel(log_level)
+    logging.getLogger('driver').setLevel(log_level)
+    logging.getLogger('driver.scrapers').setLevel(log_level)
+    logging.getLogger('driver.utils').setLevel(log_level)
+    logging.getLogger('driver.agents').setLevel(log_level)
+    logging.getLogger('driver.client').setLevel(log_level)
+    logger.info(f"Log level set to {log_level}")
+
 def main():
     try:
         # Get the current working directory
@@ -86,20 +97,25 @@ def main():
         parser.add_argument('--steps', nargs='+', default=['all'], choices=['all', 'scrape', 'summarize', 'generate'], 
                             help='Steps to execute. Can be "all", "scrape", "summarize", "generate", or any combination.')
         parser.add_argument('--data_folder', type=str, default=f'{project_root}/data', help='Path to the data folder', nargs='?')
+        parser.add_argument('--model', type=str, default='llama3.1', help='Select the model to use. The default is llama3.1', nargs='?')
+        parser.add_argument('--client', type=str, default='ollama', help='Select the client to use. The default is ollama', choices=['ollama', 'openai'], nargs='?')
+        parser.add_argument('--log-level', type=str, default='INFO', help='Select the log level. The default is INFO', choices=['DEBUG', 'INFO', 'WARNING', 'ERROR'], nargs='?')
         args = parser.parse_args()
-
+        set_log_level(args.log_level)
         # Ensure the data folder exists
         if not os.path.exists(args.data_folder):
             os.makedirs(args.data_folder)
             logger.info(f"Created data folder: {args.data_folder}")
         else:
-            logger.info(f"Data folder already exists: {args.data_folder}")
+            logger.info(f"Existing data folder: {args.data_folder}")
 
         summaries_file = f'{args.data_folder}/summaries.json'
-        dataxbase_file = f'{args.data_folder}/media_posts.db'
+        database_file = f'{args.data_folder}/media_posts.db'
         
         configuration = load_configuration()
-        initialize_db(dataxbase_file)
+        initialize_db(database_file)
+
+        client = AIClient(client_type=args.client, model=args.model)
 
         logger.info(f"Steps to execute: {args.steps}")
         logger.info(f"Number of posts to scrape: {args.posts_to_scrape}")
@@ -109,13 +125,13 @@ def main():
         for step in args.steps:
             match step:
                 case "scrape" | "all":
-                    logger.debug('Start scraping')
+                    logger.info('Start scraping')
                     scrape_substacks(configuration, args.posts_to_scrape)
                 case "summarize" | "all":
-                    logger.debug('Start summarizing')
-                    process_unprocessed_posts(limit=args.posts_to_process, summaries_file=summaries_file)
+                    logger.info('Start summarizing')
+                    process_posts(limit=args.posts_to_process, summaries_file=summaries_file, client=client, configuration=configuration)
                 case "generate" | "all":
-                    logger.debug('Start generating')
+                    logger.info('Start generating')
                     try:
                         with open(summaries_file, 'r') as f:
                             summaries_bag = json.load(f)

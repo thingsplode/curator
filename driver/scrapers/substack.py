@@ -55,7 +55,7 @@ def scrape_substack(urls: List[str], project_dir: str, num_posts_to_scrape = Non
             raise ValueError(f'Error fetching page: {e}') from e
    
     def get_authenticated_driver():
-        logger.debug('authenticating')
+        logger.info('Authenticating with Substack')
         def check_failed_login() -> bool:
             """
             Check for the presence of the 'error-container' to indicate a failed login attempt.
@@ -174,9 +174,9 @@ def scrape_substack(urls: List[str], project_dir: str, num_posts_to_scrape = Non
             try:
                 url_leaf = next((item for item in reversed(urlparse(post_url).path.split('/'))), None)
                 if url_leaf in ['about', 'archive']:
-                    logger.debug(f'Skipping {post_url} as it is not a post (about or archive)')
+                    logger.warn(f'Skipping {post_url} as it is not a post (about or archive)')
                     return None
-                logger.debug(f'Scraping {post_url}')
+                logger.info(f'Scraping {post_url}')
                 soup = get_authenticated_url_soup(post_url, driver=driver)
                 soup = get_url_soup(post_url)
                 if soup is None:
@@ -220,12 +220,12 @@ def scrape_substack(urls: List[str], project_dir: str, num_posts_to_scrape = Non
             if url not in existing_urls
         ]
         if len(filtered_sitemap_urls_and_dates) == 0:
-            logger.debug(f'No new posts found for {url}. Skipping to next URL.')
+            logger.info(f'No new posts found for {url}. Skipping to next URL.')
             continue
 
         logger.debug(f'Filtered sitemap URLs for {url}: {len(filtered_sitemap_urls_and_dates)}')
         total = num_posts_to_scrape if num_posts_to_scrape is not None else len(filtered_sitemap_urls_and_dates)
-        logger.debug(f'Scraping {total} posts after filtering for {url}.')
+        logger.info(f'Scraping {total} posts after filtering for {url}.')
 
         for post_url, post_date in tqdm.tqdm(filtered_sitemap_urls_and_dates[:total], total=total):
             result = scrape_post(post_url, domain, driver)
@@ -237,7 +237,7 @@ def scrape_substack(urls: List[str], project_dir: str, num_posts_to_scrape = Non
             sleep(random.uniform(2, 5))
     
     driver.quit()
-    logger.debug('Scraping is finished')
+    logger.info('Scraping is finished')
 
     # Save the scraped posts to the database
     save_posts_to_db(posts_data)

@@ -59,8 +59,8 @@ The default data folder is ./data. You can change this by using the --data_folde
 ```
 python main.py --data_folder ./another_folder
 ``` 
-By default, the script will scrape 5 posts and summarize 5 posts. You can change this by using the --posts_to_scrape and --posts_to_process flags.
+By default, the script will scrape 5 posts and summarize 5 posts. You can change this by using the --posts_to_scrape and --posts_to_summarize flags.
 ```
-python main.py --posts_to_scrape 10 --posts_to_process 10
+python main.py --posts_to_scrape 10 --posts_to_summarize 10
 ``` 
 

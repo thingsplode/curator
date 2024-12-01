@@ -1,17 +1,14 @@
 import time
-import autogen
 import json
 import os
 import logging
 from driver.utils.dbops import get_recent_unprocessed_posts_by_domain, mark_posts_as_processed
-from openai import OpenAI
+from jinja2 import Template
 
 logger = logging.getLogger(__name__)
-categories = [
-    'product design', 'product culture', 'leadership', 'people management', 'technical', 'product hack', 'go to market', 'sales', 'data analysis', 'data driven decision making', 'uncategorized'
-]
 
-def process_unprocessed_posts(limit=None, summaries_file=None):
+
+def process_posts(limit=None, summaries_file=None, client=None, configuration=None):
     def restructure_summaries(summaries):
         category_bag = {}
         for summary in summaries:
@@ -33,7 +30,7 @@ def process_unprocessed_posts(limit=None, summaries_file=None):
     def filter_invalid_summaries(summaries_bag):
         filtered_bag = {}
         for category, summaries in summaries_bag.items():
-            if category.lower() not in [c.lower() for c in categories]:
+            if category.lower() not in [c.lower() for c in configuration.get('categories', [])]:
                 logger.warning(f"Filtered out invalid category: {category}")
                 continue
             
@@ -60,29 +57,23 @@ def process_unprocessed_posts(limit=None, summaries_file=None):
                 "category": category
             }
         
-        prompt = f"Write a short and engaging summary of the following markdown content in 2 to 3 lines. Ensure that the symmary includes 1-2 key insights and provides a compelling reason to read the full article.\
-        Categorize the post into one of the following categories: \
-        { ', '.join(categories)}. \
-        Return a structured answer in JSON format, separating the summary, the category and anoptional error only in case you cannot fulfill the task:\n\n{post.get('md')}"
+
+        user_prompt_template = Template(configuration.get('user_prompt', ''))
+        user_prompt = user_prompt_template.render(categories=configuration.get('categories', []), post=post)
+
+        system_prompt_template = Template(configuration.get('system_prompt', ''))
+        system_prompt = system_prompt_template.render()
         
-        response = client.chat.completions.create(
-            model="gpt-4",
-            messages=[
-                {"role": "system", "content": "You are an expert copywriter and journalist. Your task is to write a TL;DR style newsletter by summarizing blog-posts and intrigue the reader to click on the link and read the full article."},
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.7,
-            max_tokens=500
+        response = client.generate_completion(
+            prompt=user_prompt,
+            system_prompt=system_prompt,
+            temperature=configuration.get('temperature', 0.7),
+            max_tokens=configuration.get('max_tokens', 500)
             )
         logger.debug(f"Response: {response}")
-        response_content = response.choices[0].message.content.strip()
-        # Rate limiting: 10000 tokens per minute
-        tokens_used = response.usage.total_tokens
-        sleep_time = tokens_used / 10000
-        logger.debug(f"Sleeping for {sleep_time} seconds")
-        time.sleep(sleep_time)  # Sleep for a fraction of a minute based on tokens used
+        
         try:
-            parsed_content = json.loads(response_content)
+            parsed_content = json.loads(response.get('content', ''))
             if 'error' in parsed_content and parsed_content['error'] is not None and parsed_content['error'] != '':
                 logger.error(f"Error in response for {post.get('url')}: {parsed_content['error']}")
                 return None
@@ -90,18 +81,13 @@ def process_unprocessed_posts(limit=None, summaries_file=None):
             logger.info(f"Domain: {post.get('domain')} | Url: {post.get('url')} | Summary: {result['summary']}")
             return result
         except json.JSONDecodeError:
-            logger.error(f"Failed to parse JSON from response for {post.get('url')}. Initial content: {response_content}")
+            logger.error(f"Failed to parse JSON from response for {post.get('url')}. Initial content: {response.get('content', '')}")
             return None
     
-    try:
-        client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
-    except KeyError as e:
-        raise ValueError("OPENAI_API_KEY environment variable is not set. Please set it before running the script.")
-    
     unprocessed_posts = get_recent_unprocessed_posts_by_domain()
-    logger.debug(f"Unprocessed posts length: {len(unprocessed_posts)}")
+    logger.info(f"Unprocessed posts length: {len(unprocessed_posts)}")
     summaries = list()
-    logger.debug(f"Summary limit: {limit}")
+    logger.info(f"Summary limit: {limit}")
     for post in unprocessed_posts[:limit] if limit else unprocessed_posts:
         result = process_single_post(post)
         if result:
