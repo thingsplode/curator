@@ -68,8 +68,14 @@ def scrape_substack(urls: List[str], project_dir: str, num_posts_to_scrape = Non
         
         options = webdriver.ChromeOptions()
         options.add_argument('--headless=new')
+        # options.add_argument('--disable-gpu')
         # options.add_argument(f'--user-agent=Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Mobile Safari/537.36')
         options.add_argument(f'--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36')
+        # options that might be necessary for headless mode on Windows
+        options.add_argument('--no-sandbox')
+        # --disable-dev-shm-usage is necessary for headless mode on Linux
+        options.add_argument("--disable-dev-shm-usage")
+        
         options.add_argument("--window-size=1920,1080")
         options.add_argument("--lang=en-US")
         logger.debug(f'Initializing driver with path: {project_dir}/chromedriver/chromedriver')

@@ -1,3 +1,75 @@
+# Introduction
+
+Curator is a tool that helps you to scrape and summarize social media posts. Currently it supports Substack.
+The workflow is as follows:
+1. Scrape posts from a Substack blog. The step is called "scrape"
+2. Summarize the posts. The step is called "summarize"
+3. Generate a summary of the blog. The step is called "generate"
+
+You can use it as a library or as a command line tool. As a command line tool you can run all the steps at once or only selected steps.
+
+Usage:
+Run the first step to scrape posts from a Substack blog.
+```
+curator --steps scrape  --posts_to_scrape 3
+```
+The posts_to_scrape switch is optional and contains the number of posts to scrape. This is useful if you want to only test a couple of posts for testing purposes.
+
+Run the second step to summarize the posts.
+```
+curator --steps summarize  --posts_to_summarize 3 --client openai
+```
+The posts_to_summarize switch is optional and contains the number of posts to summarize. This is useful if you want to only test a couple of posts for testing purposes.
+The client switch is optional and contains the client to use. The default is ollama. You can also use openai. If you don't have local ollama instance you must use the openai client.
+
+Run the third step to generate a summary of the blog.
+```
+curator --steps generate  --posts_to_generate 3
+```
+The posts_to_generate switch is optional and contains the number of posts to generate. This is useful if you want to only test a couple of posts for testing purposes.
+
+You can also run all the steps at once:
+```
+curator --steps scrape summarize generate --posts_to_process 3 --client openai
+```
+A shorthand for running all the steps at once is:
+```
+curator --all --posts_to_process 3 --client openai
+```
+
+You can use additional flags to customize the steps. For example, you can use the --data_folder flag to specify the data folder.
+```
+curator --all --data_folder ./data --posts_to_process 3 --client openai
+```
+
+You can also use the --model flag to specify the model to use.
+```
+curator --all --model gpt-4o --posts_to_process 3 --client openai
+```
+
+You can also use the --log-level flag to specify the log level.
+```
+curator --all --log-level DEBUG --posts_to_process 3 --client openai
+``` 
+
+You can always list the instructions for the steps by using the --help flag.
+```
+curator --help
+```
+
+The configuration is stored in the etc/config.json file. You can edit the configuration file to customize the steps.
+1. The list of substacks that you want to scrape can be modified in the scrapers/substack list.
+2. The categories can be modified in the categories list.
+3. The user prompt can be changed to improve the way the posts are summarized. Make sure that the whole prompt is valid JSON, meaning that you 
+    - must keep it as a single line string
+    - you must include the {{ post.md }} placeholder in the prompt.
+    - you must include the {{ categories|join(', ') }} placeholder in the prompt.
+    - you must instruct the prompt to return a valid JSON object, including 'summary', 'category', and an optional 'error' if the task cannot be completed.
+
+The resulting summary will be stored in the data/summaries/summary_template.html file.
+
+# How to use it 
+
 Run the container with Docker:
 ```
 docker run -it \
