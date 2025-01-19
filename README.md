@@ -6,6 +6,8 @@ The workflow is as follows:
 2. Summarize the posts. The step is called "summarize"
 3. Generate a summary of the blog. The step is called "generate"
 
+# User Manual
+
 You can use it as a library or as a command line tool. As a command line tool you can run all the steps at once or only selected steps.
 
 Usage:
@@ -68,7 +70,9 @@ The configuration is stored in the etc/config.json file. You can edit the config
 
 The resulting summary will be stored in the data/summaries/summary_template.html file.
 
-# How to use it 
+# Developer Documentation
+
+## Running the container with Docker
 
 Run the container with Docker:
 ```
